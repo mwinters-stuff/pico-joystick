@@ -1,0 +1,31 @@
+{
+  "cmake.configureOnOpen": false,
+  "cmake.statusbar.advanced": {
+    "debug" : {
+      "visibility": "hidden"
+              },    "launch" : {
+      "visibility": "hidden"
+               },
+    "build" : {
+      "visibility": "hidden"
+               },
+    "buildTarget" : {
+      "visibility": "hidden"
+               },
+    },
+    "files.associations": {
+      "*.h": "c",
+      "*.config": "plaintext",
+      "array": "cpp",
+      "*.tcc": "cpp",
+      "deque": "cpp",
+      "string": "cpp",
+      "unordered_map": "cpp",
+      "vector": "cpp",
+      "string_view": "cpp",
+      "memory": "cpp",
+      "random": "cpp",
+      "initializer_list": "cpp",
+      "ranges": "cpp"
+    },
+}

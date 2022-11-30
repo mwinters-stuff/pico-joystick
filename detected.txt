@@ -1,0 +1,95 @@
+Starting dumping interrupt transfer stream
+with 1 millisecond timeout.
+
+003:025:000:Interrupt transfer timed out
+No more interfaces to dump
+Usage Page (Desktop),           ; Generic desktop controls (01h)
+Usage (Joystick),               ; Joystick (04h, application collection)
+Collection (Application),
+    Report ID (1),
+    Usage (Pointer),            ; Pointer (01h, physical collection)
+    Collection (Physical),
+        Usage (X),              ; X (30h, dynamic value)
+        Usage (Y),              ; Y (31h, dynamic value)
+        Logical Minimum (0),
+        Logical Maximum (-1),
+        Report Size (16),
+        Report Count (2),
+        Input (Variable),
+    End Collection,
+    Usage Page (Button),        ; Button (09h)
+    Usage Minimum (01h),
+    Usage Maximum (02h),
+    Logical Minimum (0),
+    Logical Maximum (1),
+    Report Size (1),
+    Input (Variable),
+    Report Count (1),
+    Report Size (6),
+    Input (Variable),
+
+
+mathew@gonzalas:~/Downloads/Waratah-Published$ sudo usbhid-dump --entity=all --address=3:20 -i 0 -t 1 | grep -v : | xxd -r -p | hidrd-convert -o spec
+Starting dumping interrupt transfer stream
+with 1 millisecond timeout.
+
+003:020:000:Interrupt transfer timed out
+No more interfaces to dump
+Usage Page (Desktop),                   ; Generic desktop controls (01h)
+Usage (Joystick),                       ; Joystick (04h, application collection)
+Collection (Application),
+    Collection (Logical),
+        Report Count (2),
+        Report Size (10),
+        Logical Minimum (0),
+        Logical Maximum (1023),
+        Physical Minimum (0),
+        Physical Maximum (1023),
+        Usage (X),                      ; X (30h, dynamic value)
+        Usage (Y),                      ; Y (31h, dynamic value)
+        Input (Variable),
+        Report Size (4),
+        Report Count (1),
+        Logical Maximum (7),
+        Physical Maximum (315),
+        Unit (Degrees),
+        Usage (Hat Switch),             ; Hat switch (39h, dynamic value)
+        Input (Variable, Null State),
+        Unit,
+        Report Size (8),
+        Logical Maximum (255),
+        Physical Maximum (255),
+        Usage (Rz),                     ; Rz (35h, dynamic value)
+        Input (Variable),
+        Push,
+        Report Count (8),
+        Report Size (1),
+        Logical Maximum (1),
+        Physical Maximum (1),
+        Usage Page (Button),            ; Button (09h)
+        Usage Minimum (01h),
+        Usage Maximum (08h),
+        Input (Variable),
+        Pop,
+        Usage (Slider),                 ; Slider (36h, dynamic value)
+        Input (Variable),
+        Report Count (4),
+        Report Size (1),
+        Logical Maximum (1),
+        Physical Maximum (1),
+        Usage Page (Button),            ; Button (09h)
+        Usage Minimum (09h),
+        Usage Maximum (0Ch),
+        Input (Variable),
+        Report Count (4),
+        Input (Constant),
+    End Collection,
+    Collection (Logical),
+        Report Count (4),
+        Report Size (8),
+        Logical Maximum (255),
+        Physical Maximum (255),
+        Usage Page (FF00h),             ; FF00h, vendor-defined
+        Usage (01h),
+        Feature (Variable),
+    End Collection,

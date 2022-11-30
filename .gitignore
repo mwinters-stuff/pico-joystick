@@ -1,0 +1,51 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+build/**
+.vscode/.cortex-debug.*
+kicad/joystick/joystick-backups/joystick-2022-11-25_155824.zip
+kicad/joystick/joystick-backups/joystick-2022-11-25_160808.zip
+kicad/joystick/joystick-backups/joystick-2022-11-25_161721.zip
+kicad/joystick/joystick-backups/joystick-2022-11-25_162426.zip
+kicad/joystick/joystick-backups/joystick-2022-11-25_194553.zip
+kicad/joystick/joystick-backups/joystick-2022-11-26_191540.zip
+kicad/joystick/joystick-backups/joystick-2022-11-26_202115.zip
+kicad/joystick/joystick-backups/joystick-2022-11-26_202645.zip
+kicad/joystick/joystick-backups/joystick-2022-11-26_203425.zip
+kicad/joystick/joystick-backups/joystick-2022-11-26_204548.zip
+kicad/joystick/joystick-backups/joystick-2022-11-27_165620.zip
+kicad/joystick/joystick-backups/joystick-2022-11-27_175607.zip
+kicad/joystick/joystick-backups/joystick-2022-11-27_180607.zip
+kicad/joystick/joystick-backups/joystick-2022-11-27_181607.zip
+kicad/joystick/joystick-backups/joystick-2022-11-27_190851.zip
+kicad/joystick/joystick-backups/joystick-2022-11-27_203207.zip
