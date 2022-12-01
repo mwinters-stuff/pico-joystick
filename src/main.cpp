@@ -45,14 +45,15 @@ bool serialReady = false;
 /*------------- MAIN -------------*/
 int main(void) {
   stdio_init_all();
+  board_init();
+  tusb_init();
 
   serial_print("Init\n");
 
   hardware.begin();
   hardware.led_blink_fast();
 
-  board_init();
-  tusb_init();
+
   while (true) {
     tud_task();  // tinyusb device task
     hardware.update();
@@ -100,27 +101,7 @@ static void send_hid_report(uint8_t report_id) {
   if (!tud_hid_ready()) return;
 
   switch (report_id) {
-    case REPORT_ID_KEYBOARD:
-    {
-      // use to avoid send multiple consecutive zero report for keyboard
-      static bool has_keyboard_key = false;
-
-      if ( hardware.button_down(baMiddleMiddle) )
-      {
-        uint8_t keycode[6] = { 0 };
-        keycode[0] = HID_KEY_A;
-
-        tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, keycode);
-        has_keyboard_key = true;
-      }else
-      {
-        // send empty key report if previously has key pressed
-        if (has_keyboard_key) tud_hid_keyboard_report(REPORT_ID_KEYBOARD, 0, NULL);
-        has_keyboard_key = false;
-      }
-    }
-    break;
-    // case REPORT_ID_JOYSTICK_LEFT: {
+     // case REPORT_ID_JOYSTICK_LEFT: {
     //   static HID_JoystickReport_Data_t report = {0, 0, 0};
 
     //   report.xAxis1 = hardware.stick_left_x();
@@ -151,9 +132,9 @@ static void send_hid_report(uint8_t report_id) {
       // use to avoid send multiple consecutive zero report for keyboard
       static bool has_gamepad_key = false;
 
-      hid_gamepad_report_t report =
+      hid_gamepad_custom_report_t report =
       {
-        .x   = 0, .y = 0, .z = 0, .rz = 0, .rx = 0, .ry = 0,
+        .x   = 0, .y = 0, .rx = 0, .ry = 0,
         .hat = 0, .buttons = 0
       };
 
@@ -164,7 +145,7 @@ static void send_hid_report(uint8_t report_id) {
 
       if(hardware.stick_left_button_down())
       {
-        report.buttons = GAMEPAD_BUTTON_TR;
+        report.buttons = GAMEPAD_BUTTON_TL;
       }
 
       if(hardware.stick_right_button_down())
@@ -188,6 +169,7 @@ static void send_hid_report(uint8_t report_id) {
           report.hat = GAMEPAD_HAT_LEFT;
         break;
         case baMiddleMiddle:
+          report.buttons |= GAMEPAD_BUTTON_START;
         break;
         case baMiddleRight:
           report.hat = GAMEPAD_HAT_RIGHT;
@@ -228,7 +210,7 @@ void hid_task(void) {
     tud_remote_wakeup();
   } else {
     // Send the 1st of report chain, the rest will be sent by tud_hid_report_complete_cb()
-    send_hid_report(REPORT_ID_KEYBOARD);
+    send_hid_report(REPORT_ID_GAMEPAD);
   }
 }
 
@@ -239,7 +221,7 @@ void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t
   (void)instance;
   (void)len;
   uint8_t next_report_id = report[0] + 1;
-  printf("tud_hid_report_complete_cb %d\n",next_report_id);
+  // printf("tud_hid_report_complete_cb %d\n",next_report_id);
 
   if (next_report_id < REPORT_ID_COUNT) {
     send_hid_report(next_report_id);
@@ -276,13 +258,13 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
   serialReady = false;
   if (dtr) {
     serialReady = true;
-    tud_cdc_write_str("Connected\n");
+    // tud_cdc_write_str("Connected\n");
   }
 }
 
 void serial_print(const char* str) {
   if (serialReady) {
-    tud_cdc_write_str(str);
+    // tud_cdc_write_str(str);
   }else{
     printf(str);
   }

@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.16)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -33,11 +33,9 @@ target_link_libraries(dev_hid_composite PUBLIC
         tinyusb_device 
         tinyusb_board
         pico_stdlib 
-        pico_unique_id
         hardware_adc
         hardware_i2c
         sensor_PCF8591
-        sensor_VEML6070
         )
 
 # Uncomment this line to enable fix for Errata RP2040-E5 (the fix requires use of GPIO 15)

@@ -27,13 +27,13 @@
 		"chris-hock.pioasm"
 	],
 
-	"mounts": [
-		{ 
-			"source": "/home/mathew/src/pico-sensor-devices", 
-			"target": "/workspaces/pico-sensor-devices", 
-			"type": "bind" 
-		}
-	],
+	// "mounts": [
+	// 	{ 
+	// 		"source": "/home/mathew/src/pico-sensor-devices", 
+	// 		"target": "/workspaces/pico-sensor-devices", 
+	// 		"type": "bind" 
+	// 	}
+	// ],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],

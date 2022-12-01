@@ -14,7 +14,7 @@ RUN wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/g
 RUN mv gcc-arm-none-eabi-10.3-2021.10 gcc-arm-none && \
     rm gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 
 ENV PATH=$PATH:/apps/gcc-arm-none/bin
-RUN git clone -b master https://github.com/raspberrypi/pico-sdk.git --recurse-submodules --depth=1 
+RUN git clone -b 1.4.0 https://github.com/raspberrypi/pico-sdk.git --recurse-submodules --depth=1 
 ENV PICO_SDK_PATH=/apps/pico-sdk
 # RUN git clone https://github.com/openocd-org/openocd.git --depth=1 --recurse-submodules \
 RUN git clone https://github.com/raspberrypi/openocd.git --depth=1 --recurse-submodules \
