@@ -101,93 +101,93 @@ static void send_hid_report(uint8_t report_id) {
   if (!tud_hid_ready()) return;
 
   switch (report_id) {
-     // case REPORT_ID_JOYSTICK_LEFT: {
-    //   static HID_JoystickReport_Data_t report = {0, 0, 0};
+     case REPORT_ID_JOYSTICK_LEFT: {
+      static HID_JoystickReport_Data_t report = {0, 0, 0};
 
-    //   report.xAxis1 = hardware.stick_left_x();
-    //   report.yAxis1 = hardware.stick_left_y();
+      report.xAxis1 = hardware.stick_left_x();
+      report.yAxis1 = hardware.stick_left_y();
 
-    //   report.buttons.bits.trigger = hardware.button_down(baBottomLeft) ? 1 : 0;
-    //   report.buttons.bits.thumb = hardware.stick_left_button_down();
-    //   tud_hid_report(REPORT_ID_JOYSTICK_LEFT, &report, sizeof(report));
-    //   // button = (button + 1) & 0x07; // limit button to the range 0..7
+      report.buttons.bits.trigger = hardware.button_down(baBottomLeft) ? 1 : 0;
+      report.buttons.bits.thumb = hardware.stick_left_button_down();
+      tud_hid_report(REPORT_ID_JOYSTICK_LEFT, &report, sizeof(report));
+      // button = (button + 1) & 0x07; // limit button to the range 0..7
 
-    // } 
-    // break;
-    // case REPORT_ID_JOYSTICK_RIGHT: {
-    //   static HID_JoystickReport_Data_t report = {0, 0, 0};
+    } 
+    break;
+    case REPORT_ID_JOYSTICK_RIGHT: {
+      static HID_JoystickReport_Data_t report = {0, 0, 0};
 
-    //   report.xAxis1 = hardware.stick_right_x();
-    //   report.yAxis1 = hardware.stick_right_y();
+      report.xAxis1 = hardware.stick_right_x();
+      report.yAxis1 = hardware.stick_right_y();
 
-    //   report.buttons.bits.trigger = hardware.button_down(baBottomRight) ? 1 : 0;
-    //   report.buttons.bits.thumb = hardware.stick_right_button_down();
-    //   tud_hid_report(REPORT_ID_JOYSTICK_RIGHT, &report, sizeof(report));
-    //   // button = (button + 1) & 0x07; // limit button to the range 0..7
+      report.buttons.bits.trigger = hardware.button_down(baBottomRight) ? 1 : 0;
+      report.buttons.bits.thumb = hardware.stick_right_button_down();
+      tud_hid_report(REPORT_ID_JOYSTICK_RIGHT, &report, sizeof(report));
+      // button = (button + 1) & 0x07; // limit button to the range 0..7
 
-    // } 
-    // break;
-    case REPORT_ID_GAMEPAD:
-    {
-      // use to avoid send multiple consecutive zero report for keyboard
-      static bool has_gamepad_key = false;
+    } 
+    break;
+    // case REPORT_ID_GAMEPAD:
+    // {
+    //   // use to avoid send multiple consecutive zero report for keyboard
+    //   static bool has_gamepad_key = false;
 
-      hid_gamepad_custom_report_t report =
-      {
-        .x   = 0, .y = 0, .rx = 0, .ry = 0,
-        .hat = 0, .buttons = 0
-      };
+    //   hid_gamepad_custom_report_t report =
+    //   {
+    //     .x   = 0, .y = 0, .rx = 0, .ry = 0,
+    //     .hat = 0, .buttons = 0
+    //   };
 
-      report.x = hardware.stick_left_x();
-      report.y = hardware.stick_left_y();
-      report.rx = hardware.stick_right_x();
-      report.ry = hardware.stick_right_y();
+    //   report.x = hardware.stick_left_x();
+    //   report.y = hardware.stick_left_y();
+    //   report.rx = hardware.stick_right_x();
+    //   report.ry = hardware.stick_right_y();
 
-      if(hardware.stick_left_button_down())
-      {
-        report.buttons = GAMEPAD_BUTTON_TL;
-      }
+    //   if(hardware.stick_left_button_down())
+    //   {
+    //     report.buttons = GAMEPAD_BUTTON_TL;
+    //   }
 
-      if(hardware.stick_right_button_down())
-      {
-        report.buttons |= GAMEPAD_BUTTON_TR;
-      }
+    //   if(hardware.stick_right_button_down())
+    //   {
+    //     report.buttons |= GAMEPAD_BUTTON_TR;
+    //   }
 
 
-      report.hat = GAMEPAD_HAT_CENTERED;
-      switch(hardware.last_button_down()){
-        case baTopLeft:
-          report.hat = GAMEPAD_HAT_UP_LEFT;
-        break;
-        case baTopMiddle:
-          report.hat = GAMEPAD_HAT_UP;
-        break;
-        case baTopRight:
-          report.hat = GAMEPAD_HAT_UP_RIGHT;
-        break;
-        case baMiddleLeft:
-          report.hat = GAMEPAD_HAT_LEFT;
-        break;
-        case baMiddleMiddle:
-          report.buttons |= GAMEPAD_BUTTON_START;
-        break;
-        case baMiddleRight:
-          report.hat = GAMEPAD_HAT_RIGHT;
-        break;
-        case baBottomLeft:
-          report.hat = GAMEPAD_HAT_DOWN_LEFT;
-        break;
-        case baBottomMiddle:
-          report.hat = GAMEPAD_HAT_DOWN;
-        break;
-        case baBottomRight:
-          report.hat = GAMEPAD_HAT_DOWN_RIGHT;
-        break;
+    //   report.hat = GAMEPAD_HAT_CENTERED;
+    //   switch(hardware.last_button_down()){
+    //     case baTopLeft:
+    //       report.hat = GAMEPAD_HAT_UP_LEFT;
+    //     break;
+    //     case baTopMiddle:
+    //       report.hat = GAMEPAD_HAT_UP;
+    //     break;
+    //     case baTopRight:
+    //       report.hat = GAMEPAD_HAT_UP_RIGHT;
+    //     break;
+    //     case baMiddleLeft:
+    //       report.hat = GAMEPAD_HAT_LEFT;
+    //     break;
+    //     case baMiddleMiddle:
+    //       report.buttons |= GAMEPAD_BUTTON_START;
+    //     break;
+    //     case baMiddleRight:
+    //       report.hat = GAMEPAD_HAT_RIGHT;
+    //     break;
+    //     case baBottomLeft:
+    //       report.hat = GAMEPAD_HAT_DOWN_LEFT;
+    //     break;
+    //     case baBottomMiddle:
+    //       report.hat = GAMEPAD_HAT_DOWN;
+    //     break;
+    //     case baBottomRight:
+    //       report.hat = GAMEPAD_HAT_DOWN_RIGHT;
+    //     break;
 
-      }
-      tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
-    }
-    break;    
+    //   }
+    //   tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
+    // }
+    // break;    
     default:
       break;
   }
@@ -210,7 +210,7 @@ void hid_task(void) {
     tud_remote_wakeup();
   } else {
     // Send the 1st of report chain, the rest will be sent by tud_hid_report_complete_cb()
-    send_hid_report(REPORT_ID_GAMEPAD);
+    send_hid_report(START_REPORT_ID);
   }
 }
 
