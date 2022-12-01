@@ -258,13 +258,13 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
   serialReady = false;
   if (dtr) {
     serialReady = true;
-    // tud_cdc_write_str("Connected\n");
+    serial_print("Connected\n");
   }
 }
 
 void serial_print(const char* str) {
   if (serialReady) {
-    // tud_cdc_write_str(str);
+    tud_cdc_write_str(str);
   }else{
     printf(str);
   }
