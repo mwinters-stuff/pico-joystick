@@ -176,9 +176,9 @@ void Hardware::update(){
 void Hardware::led_blinking_task() {
   // blink is disabled
   if (!blink_interval_ms)
-  {
+{
     return;
-  } 
+}
 
   // Blink every interval ms
   if (absolute_time_diff_us(get_absolute_time(), next_blink_time) > 0){

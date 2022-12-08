@@ -41,6 +41,8 @@ Hardware hardware;
 
 void serial_print(const char* str);
 bool serialReady = false;
+static absolute_time_t next_task_time;
+#define USB_REPORT_INTERVAL 10
 
 /*------------- MAIN -------------*/
 int main(void) {
@@ -53,12 +55,13 @@ int main(void) {
   hardware.begin();
   hardware.led_blink_fast();
 
+  next_task_time =  make_timeout_time_ms(USB_REPORT_INTERVAL);
 
   while (true) {
     tud_task();  // tinyusb device task
     hardware.update();
     hid_task();
-    serial_print(("\r" + hardware.debug()).c_str());
+    // serial_print(("\r" + hardware.debug()).c_str());
 
   }
 
@@ -71,11 +74,13 @@ int main(void) {
 
 // Invoked when device is mounted
 void tud_mount_cb(void) {
+  printf("tud_mount_cb\n");
   hardware.led_blink_slow();
 }
 
 // Invoked when device is unmounted
 void tud_umount_cb(void) {
+  printf("tud_umount_cb\n");
   hardware.led_blink_fast();
 }
 
@@ -101,7 +106,9 @@ static void send_hid_report(uint8_t report_id) {
   if (!tud_hid_ready()) return;
 
   switch (report_id) {
+#ifdef USE_JOYSTICK_LEFT
      case REPORT_ID_JOYSTICK_LEFT: {
+      // printf("send_hid_report joystick left\n");
       static HID_JoystickReport_Data_t report = {0, 0, 0};
 
       report.xAxis1 = hardware.stick_left_x();
@@ -114,6 +121,8 @@ static void send_hid_report(uint8_t report_id) {
 
     } 
     break;
+#endif    
+#ifdef USE_JOYSTICK_RIGHT
     case REPORT_ID_JOYSTICK_RIGHT: {
       static HID_JoystickReport_Data_t report = {0, 0, 0};
 
@@ -127,67 +136,70 @@ static void send_hid_report(uint8_t report_id) {
 
     } 
     break;
-    // case REPORT_ID_GAMEPAD:
-    // {
-    //   // use to avoid send multiple consecutive zero report for keyboard
-    //   static bool has_gamepad_key = false;
+#endif    
+#ifdef USE_GAMEPAD    
+    case REPORT_ID_GAMEPAD:
+    {
+      // use to avoid send multiple consecutive zero report for keyboard
+      static bool has_gamepad_key = false;
 
-    //   hid_gamepad_custom_report_t report =
-    //   {
-    //     .x   = 0, .y = 0, .rx = 0, .ry = 0,
-    //     .hat = 0, .buttons = 0
-    //   };
+      hid_gamepad_custom_report_t report =
+      {
+        .x   = 0, .y = 0, .rx = 0, .ry = 0,
+        .hat = 0, .buttons = 0
+      };
 
-    //   report.x = hardware.stick_left_x();
-    //   report.y = hardware.stick_left_y();
-    //   report.rx = hardware.stick_right_x();
-    //   report.ry = hardware.stick_right_y();
+      report.x = hardware.stick_left_x();
+      report.y = hardware.stick_left_y();
+      report.rx = hardware.stick_right_x();
+      report.ry = hardware.stick_right_y();
 
-    //   if(hardware.stick_left_button_down())
-    //   {
-    //     report.buttons = GAMEPAD_BUTTON_TL;
-    //   }
+      if(hardware.stick_left_button_down())
+      {
+        report.buttons = GAMEPAD_BUTTON_TL;
+      }
 
-    //   if(hardware.stick_right_button_down())
-    //   {
-    //     report.buttons |= GAMEPAD_BUTTON_TR;
-    //   }
+      if(hardware.stick_right_button_down())
+      {
+        report.buttons |= GAMEPAD_BUTTON_TR;
+      }
 
 
-    //   report.hat = GAMEPAD_HAT_CENTERED;
-    //   switch(hardware.last_button_down()){
-    //     case baTopLeft:
-    //       report.hat = GAMEPAD_HAT_UP_LEFT;
-    //     break;
-    //     case baTopMiddle:
-    //       report.hat = GAMEPAD_HAT_UP;
-    //     break;
-    //     case baTopRight:
-    //       report.hat = GAMEPAD_HAT_UP_RIGHT;
-    //     break;
-    //     case baMiddleLeft:
-    //       report.hat = GAMEPAD_HAT_LEFT;
-    //     break;
-    //     case baMiddleMiddle:
-    //       report.buttons |= GAMEPAD_BUTTON_START;
-    //     break;
-    //     case baMiddleRight:
-    //       report.hat = GAMEPAD_HAT_RIGHT;
-    //     break;
-    //     case baBottomLeft:
-    //       report.hat = GAMEPAD_HAT_DOWN_LEFT;
-    //     break;
-    //     case baBottomMiddle:
-    //       report.hat = GAMEPAD_HAT_DOWN;
-    //     break;
-    //     case baBottomRight:
-    //       report.hat = GAMEPAD_HAT_DOWN_RIGHT;
-    //     break;
+      report.hat = GAMEPAD_HAT_CENTERED;
+      switch(hardware.last_button_down()){
+        case baTopLeft:
+          report.hat = GAMEPAD_HAT_UP_LEFT;
+        break;
+        case baTopMiddle:
+          report.hat = GAMEPAD_HAT_UP;
+        break;
+        case baTopRight:
+          report.hat = GAMEPAD_HAT_UP_RIGHT;
+        break;
+        case baMiddleLeft:
+          report.hat = GAMEPAD_HAT_LEFT;
+        break;
+        case baMiddleMiddle:
+          report.buttons |= GAMEPAD_BUTTON_START;
+        break;
+        case baMiddleRight:
+          report.hat = GAMEPAD_HAT_RIGHT;
+        break;
+        case baBottomLeft:
+          report.hat = GAMEPAD_HAT_DOWN_LEFT;
+        break;
+        case baBottomMiddle:
+          report.hat = GAMEPAD_HAT_DOWN;
+        break;
+        case baBottomRight:
+          report.hat = GAMEPAD_HAT_DOWN_RIGHT;
+        break;
 
-    //   }
-    //   tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
-    // }
-    // break;    
+      }
+      tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
+    }
+    break;    
+#endif
     default:
       break;
   }
@@ -196,12 +208,14 @@ static void send_hid_report(uint8_t report_id) {
 // Every 10ms, we will sent 1 report for each HID profile (keyboard, mouse etc ..)
 // tud_hid_report_complete_cb() is used to send the next report after previous one is complete
 void hid_task(void) {
-  // Poll every 10ms
-  const uint32_t interval_ms = 10;
-  static uint32_t start_ms = 0;
+  if (absolute_time_diff_us(get_absolute_time(), next_task_time) > 0){
+    // printf("hid_task No Time %" PRId64 " %" PRIu32 " %" PRIu32 "\n", atd, to_ms_since_boot(at), to_ms_since_boot(next_task_time));
+    return;  // not enough time
+  } 
 
-  if (board_millis() - start_ms < interval_ms) return;  // not enough time
-  start_ms += interval_ms;
+  next_task_time = make_timeout_time_ms(USB_REPORT_INTERVAL);
+  // printf("hid_task %" PRIu32 "\n", to_ms_since_boot(get_absolute_time()));
+
 
   // Remote wakeup
   if (tud_suspended() && hardware.button_down(baBottomMiddle)) {

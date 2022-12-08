@@ -6,10 +6,11 @@ set(CMAKE_CXX_STANDARD 17)
 
 # set(PICO_SENSORS_PATH "../../pico-sensor-devices")
 # set(PICO_SENSORS_FETCH_FROM_GIT 0)
+include(pico_sdk_import.cmake)
+
 set(PICO_SENSORS_FETCH_FROM_GIT 1)
 include(pico_sensors_import.cmake)
 
-include(pico_sdk_import.cmake)
 
 project(joystick)
 
