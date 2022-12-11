@@ -32,17 +32,18 @@
 #include "pico/stdlib.h"
 #include "tusb.h"
 #include "usb_descriptors.h"
-
+#include "hardware/watchdog.h"
 #include "hardware.h"
 
 void hid_task(void);
 
-Hardware hardware;
 
 void serial_print(const char* str);
 bool serialReady = false;
 static absolute_time_t next_task_time;
 #define USB_REPORT_INTERVAL 10
+
+SwitchesPosition switches_position;
 
 /*------------- MAIN -------------*/
 int main(void) {
@@ -56,31 +57,46 @@ int main(void) {
   hardware.led_blink_fast();
 
   next_task_time =  make_timeout_time_ms(USB_REPORT_INTERVAL);
+  hardware.update();
+  switches_position = hardware.switches_position();
+  // configure_usb();
+
+  watchdog_enable(100, 1);
 
   while (true) {
+    watchdog_update();
     tud_task();  // tinyusb device task
     hardware.update();
+    serial_print( hardware.debug().c_str());
+    
+    if(hardware.switches_position() != switches_position){
+      serial_print("Switches Changed, Rebooting\n");
+      sleep_ms(1000);
+    }
     hid_task();
-    // serial_print(("\r" + hardware.debug()).c_str());
 
   }
 
   return 0;
 }
 
+
+void configure_usb(){
+
+}
 //--------------------------------------------------------------------+
 // Device callbacks
 //--------------------------------------------------------------------+
 
 // Invoked when device is mounted
 void tud_mount_cb(void) {
-  printf("tud_mount_cb\n");
+  serial_print("tud_mount_cb\n");
   hardware.led_blink_slow();
 }
 
 // Invoked when device is unmounted
 void tud_umount_cb(void) {
-  printf("tud_umount_cb\n");
+  serial_print("tud_umount_cb\n");
   hardware.led_blink_fast();
 }
 
@@ -106,7 +122,21 @@ static void send_hid_report(uint8_t report_id) {
   if (!tud_hid_ready()) return;
 
   switch (report_id) {
-#ifdef USE_JOYSTICK_LEFT
+    case REPORT_ID_JOYSTICK_SINGLE: {
+      // printf("send_hid_report joystick left\n");
+      static HID_JoystickReport_Data_t report = {0, 0, 0};
+
+      report.xAxis1 = hardware.stick_left_x();
+      report.yAxis1 = hardware.stick_left_y();
+
+      report.buttons.bits.trigger = hardware.button_down(baBottomLeft) ? 1 : 0;
+      report.buttons.bits.thumb = hardware.stick_left_button_down();
+      tud_hid_report(REPORT_ID_JOYSTICK_SINGLE, &report, sizeof(report));
+      // button = (button + 1) & 0x07; // limit button to the range 0..7
+
+    } 
+    break;
+
      case REPORT_ID_JOYSTICK_LEFT: {
       // printf("send_hid_report joystick left\n");
       static HID_JoystickReport_Data_t report = {0, 0, 0};
@@ -121,8 +151,7 @@ static void send_hid_report(uint8_t report_id) {
 
     } 
     break;
-#endif    
-#ifdef USE_JOYSTICK_RIGHT
+
     case REPORT_ID_JOYSTICK_RIGHT: {
       static HID_JoystickReport_Data_t report = {0, 0, 0};
 
@@ -136,8 +165,8 @@ static void send_hid_report(uint8_t report_id) {
 
     } 
     break;
-#endif    
-#ifdef USE_GAMEPAD    
+
+
     case REPORT_ID_GAMEPAD:
     {
       // use to avoid send multiple consecutive zero report for keyboard
@@ -199,7 +228,6 @@ static void send_hid_report(uint8_t report_id) {
       tud_hid_report(REPORT_ID_GAMEPAD, &report, sizeof(report));
     }
     break;    
-#endif
     default:
       break;
   }
@@ -224,7 +252,20 @@ void hid_task(void) {
     tud_remote_wakeup();
   } else {
     // Send the 1st of report chain, the rest will be sent by tud_hid_report_complete_cb()
-    send_hid_report(START_REPORT_ID);
+    
+    switch(hardware.switches_position())
+    {
+      case spTopUpBottomUp:
+        send_hid_report(REPORT_ID_JOYSTICK_SINGLE);
+        break;
+      case spTopDownBottomUp:
+        send_hid_report(REPORT_ID_JOYSTICK_LEFT);
+        break;
+      case spTopUpBottomDown:
+        send_hid_report(REPORT_ID_GAMEPAD);
+        break;
+    }
+
   }
 }
 
@@ -234,11 +275,18 @@ void hid_task(void) {
 void tud_hid_report_complete_cb(uint8_t instance, uint8_t const* report, uint8_t len) {
   (void)instance;
   (void)len;
-  uint8_t next_report_id = report[0] + 1;
-  // printf("tud_hid_report_complete_cb %d\n",next_report_id);
 
-  if (next_report_id < REPORT_ID_COUNT) {
-    send_hid_report(next_report_id);
+  uint8_t report_id = report[0];
+  switch(hardware.switches_position())
+  {
+    case spTopUpBottomDown:
+    case spTopUpBottomUp:
+      // send_hid_report(REPORT_ID_JOYSTICK_SINGLE);
+      break;
+    case spTopDownBottomUp:
+      if(report_id == REPORT_ID_JOYSTICK_LEFT)
+        send_hid_report(REPORT_ID_JOYSTICK_RIGHT);
+      break;
   }
 }
 
@@ -252,7 +300,7 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
   (void)report_type;
   (void)buffer;
   (void)reqlen;
-  printf("tud_hid_get_report_cb\n");
+  serial_print("tud_hid_get_report_cb\n");
 
   return 0;
 }

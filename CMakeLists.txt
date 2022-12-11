@@ -36,6 +36,7 @@ target_link_libraries(dev_hid_composite PUBLIC
         pico_stdlib 
         hardware_adc
         hardware_i2c
+        hardware_watchdog
         sensor_PCF8591
         )
 

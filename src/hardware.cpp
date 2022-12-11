@@ -20,9 +20,11 @@ enum {
   BLINK_SUSPENDED = 2500,
 };
 
+Hardware hardware;
 
 Hardware::Hardware(): i2c(i2c0), pcf8591(){
   blink_interval_ms = 0;
+  
 }
 
 void Hardware::begin(){
@@ -122,27 +124,22 @@ std::string Hardware::debug(){
           break;
       }
 
-      ss << ")" << (int)adc_stick_1_x_raw << " " << (int)adc_stick_1_y_raw << " " << (int)adc_stick_2_x_raw << " " <<  (int)adc_stick_2_y_raw;
+      ss << ") " << (int)adc_stick_1_x_raw << " " << (int)adc_stick_1_y_raw << " " << (int)adc_stick_2_x_raw << " " <<  (int)adc_stick_2_y_raw << "          \r";
       return ss.str();
 }
 
 void Hardware::update(){
   led_blinking_task();
 
-    pcf8591.analogRead4();
-    uint8_t adc1_y_raw = pcf8591.lastRead(0) ^ 0xff;
-    uint8_t adc1_x_raw = pcf8591.lastRead(1) ;
-    uint8_t adc2_y_raw = pcf8591.lastRead(2) ^ 0xff;
-    uint8_t adc2_x_raw = pcf8591.lastRead(3) ;
-
-    if(adc1_x_raw == PCF8591_I2C_ERROR || adc1_y_raw == PCF8591_I2C_ERROR || adc2_x_raw == PCF8591_I2C_ERROR || adc2_y_raw == PCF8591_I2C_ERROR)
+    if(pcf8591.analogRead4() == PCF8591_I2C_ERROR)
     {
       printf("****I2C Error\n\n\n");
+    
     }else{
-      adc_stick_1_y_raw = adc1_y_raw;
-      adc_stick_1_x_raw = adc1_x_raw;
-      adc_stick_2_y_raw = adc2_y_raw;
-      adc_stick_2_x_raw = adc2_x_raw;
+      adc_stick_1_y_raw = pcf8591.lastRead(0) ^ 0xff;
+      adc_stick_1_x_raw = pcf8591.lastRead(1) ;
+      adc_stick_2_y_raw = pcf8591.lastRead(2) ^ 0xff;
+      adc_stick_2_x_raw = pcf8591.lastRead(3) ;
     }
 
     stick_down1 = !gpio_get(GPIO_BUTTON_STICK1);

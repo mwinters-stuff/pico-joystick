@@ -25,6 +25,7 @@
 
 #include "tusb.h"
 #include "usb_descriptors.h"
+#include "hardware.h"
 
 /* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
  * Same VID/PID with different interface e.g MSC (first), then CDC (later) will possibly cause system error on PC.
@@ -73,30 +74,44 @@ uint8_t const * tud_descriptor_device_cb(void)
 //--------------------------------------------------------------------+
 // HID Report Descriptor
 //--------------------------------------------------------------------+
-
-uint8_t const desc_hid_report[] =
-{
   // TUD_HID_REPORT_DESC_KEYBOARD( HID_REPORT_ID(REPORT_ID_KEYBOARD         )),
   // TUD_HID_REPORT_DESC_MOUSE   ( HID_REPORT_ID(REPORT_ID_MOUSE            )),
   // TUD_HID_REPORT_DESC_CONSUMER( HID_REPORT_ID(REPORT_ID_CONSUMER_CONTROL )),
-#ifdef USE_GAMEPAD  
-  TUD_HID_REPORT_DESC_GAMEPAD_CUSTOM ( HID_REPORT_ID(REPORT_ID_GAMEPAD          )),
-#endif  
-#ifdef USE_JOYSTICK_LEFT
-  TUD_HID_REPORT_DESC_JOYSTICK_LEFT ( HID_REPORT_ID(REPORT_ID_JOYSTICK_LEFT          )),
-#endif  
-#ifdef USE_JOYSTICK_RIGHT
-  TUD_HID_REPORT_DESC_JOYSTICK_RIGHT ( HID_REPORT_ID(REPORT_ID_JOYSTICK_RIGHT          )),
-#endif  
+
+
+uint8_t const desc_hid_report_single_joystick[] =
+{
+  TUD_HID_REPORT_DESC_JOYSTICK_SINGLE ( HID_REPORT_ID(REPORT_ID_JOYSTICK_SINGLE      )),
 };
+
+uint8_t const desc_hid_report_dual_joystick[] =
+{
+  TUD_HID_REPORT_DESC_JOYSTICK_LEFT ( HID_REPORT_ID(REPORT_ID_JOYSTICK_LEFT          )),
+  TUD_HID_REPORT_DESC_JOYSTICK_RIGHT ( HID_REPORT_ID(REPORT_ID_JOYSTICK_RIGHT        )),
+
+};
+
+uint8_t const desc_hid_report_gamepad[] =
+{
+  TUD_HID_REPORT_DESC_GAMEPAD_CUSTOM ( HID_REPORT_ID(REPORT_ID_GAMEPAD          )),
+};
+
 
 // Invoked when received GET HID REPORT DESCRIPTOR
 // Application return pointer to descriptor
 // Descriptor contents must exist long enough for transfer to complete
 uint8_t const * tud_hid_descriptor_report_cb(uint8_t instance)
 {
-  (void) instance;
-  return desc_hid_report;
+  switch(hardware.switches_position())
+  {
+    case spTopUpBottomUp:
+      return desc_hid_report_single_joystick;
+    case spTopDownBottomUp:
+      return desc_hid_report_dual_joystick;
+    case spTopUpBottomDown:
+      return desc_hid_report_gamepad;
+  }
+  return desc_hid_report_single_joystick;
 }
 
 //--------------------------------------------------------------------+
@@ -120,18 +135,46 @@ enum
 #define EPNUM_CDC_OUT   0x02
 #define EPNUM_CDC_IN    0x82
 
-uint8_t const desc_configuration[] =
+uint8_t const desc_configuration_single_joystick[] =
 {
   // Config number, interface count, string index, total length, attribute, power in mA
   TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
 
   // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
-  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report), EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 5),
+  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_single_joystick), EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 5),
 
   // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
   TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 4, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 64)
 
 };
+
+uint8_t const desc_configuration_dual_joystick[] =
+{
+  // Config number, interface count, string index, total length, attribute, power in mA
+  TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+
+  // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
+  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_dual_joystick), EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 5),
+
+  // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
+  TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 4, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 64)
+
+};
+
+uint8_t const desc_configuration_gamepad[] =
+{
+  // Config number, interface count, string index, total length, attribute, power in mA
+  TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+
+  // Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
+  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 0, HID_ITF_PROTOCOL_NONE, sizeof(desc_hid_report_gamepad), EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 5),
+
+  // Interface number, string index, EP notification address and size, EP data address (out, in) and size.
+  TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 4, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 64)
+
+};
+
+
 
 #if TUD_OPT_HIGH_SPEED
 // Per USB specs: high speed capable device must report device_qualifier and other_speed_configuration
@@ -186,10 +229,19 @@ uint8_t const* tud_descriptor_other_speed_configuration_cb(uint8_t index)
 // Descriptor contents must exist long enough for transfer to complete
 uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 {
-  (void) index; // for multiple configurations
+  (void) index;
+  switch(hardware.switches_position())
+  {
+    case spTopUpBottomUp:
+      return desc_configuration_single_joystick;
+    case spTopDownBottomUp:
+      return desc_configuration_dual_joystick;
+    case spTopUpBottomDown:
+      return desc_configuration_gamepad;
+  }
 
   // This example use the same configuration for both high and full speed mode
-  return desc_configuration;
+  return desc_configuration_single_joystick;
 }
 
 //--------------------------------------------------------------------+

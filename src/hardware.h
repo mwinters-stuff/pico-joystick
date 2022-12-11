@@ -32,6 +32,7 @@
 #define GPIO_SWITCH_2_UP   20
 #define GPIO_SWITCH_2_DOWN 21
 
+
 enum SwitchesPosition{
   spTopUpBottomUp,
   spTopDownBottomUp,
@@ -76,7 +77,7 @@ class Hardware{
     ButtonArray lastButtonDown = baNone;
 
     SwitchesPosition switchesPosition;
-
+  
   public:
     Hardware();
 
@@ -110,5 +111,7 @@ class Hardware{
     void led_on();
 
 };
+
+extern Hardware hardware;
 
 #endif
